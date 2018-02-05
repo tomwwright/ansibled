@@ -1,0 +1,47 @@
+# creates a VPC, configures a list of defined subnets, configures a list of defined security groups
+
+- name: create VPC
+  ec2_vpc_net:
+    name: "{{ vpc_name }}"
+    cidr_block: "{{ vpc_cidr_block }}"
+    region: "{{ aws_region }}"
+  register: create_vpc
+
+- name: "set fact: VPC ID"
+  set_fact:
+    vpc_id: "{{ create_vpc.vpc.id }}"
+
+- name: create VPC subnets
+  ec2_vpc_subnet:
+    vpc_id: "{{ vpc_id }}"
+    cidr: "{{ item.value.cidr }}"
+    az: "{{ item.value.az }}"
+    tags:
+      Name: "{{ item.key }}"
+  with_dict: "{{ vpc_subnets }}"
+  register: create_vpc_subnets
+
+- name: "set fact: VPC subnet IDs"
+  set_fact:
+    vpc_subnet_ids: "{{ vpc_subnet_ids | default({}) | combine({ item.subnet.tags.Name: item.subnet.id }) }}"
+  loop: "{{ create_vpc_subnets.results }}"
+
+- name: create VPC security groups
+  ec2_group:
+    name: "{{ item.name }}"
+    description: "{{ item.description }}"
+    vpc_id: "{{ vpc_id }}"
+    rules: "{{ item.rules }}"
+  loop: "{{ vpc_security_groups }}"
+
+- name: create EC2 key
+  ec2_key:
+    name: "{{ vpc_key }}"
+  register: ec2_key
+
+- name: create Route 53 private hosted zone
+  route53_zone:
+    zone: "{{ vpc_dns_zone }}"
+    state: present
+    vpc_id: "{{ vpc_id }}"
+    vpc_region: "{{ aws_region }}"

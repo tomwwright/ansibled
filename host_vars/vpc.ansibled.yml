@@ -1,0 +1,47 @@
+vpc_cidr_block: 10.0.0.0/16
+
+vpc_dns_zone: ansibled
+
+vpc_subnets:
+  private-a:
+    cidr: 10.0.1.0/24
+    az: "{{ aws_region }}a"
+  public-a:
+    cidr: 10.0.2.0/24
+    az: "{{ aws_region }}a"
+  private-b:
+    cidr: 10.0.3.0/24
+    az: "{{ aws_region }}b"
+  public-b:
+    cidr: 10.0.4.0/24
+    az: "{{ aws_region }}b"
+  private-c:
+    cidr: 10.0.5.0/24
+    az: "{{ aws_region }}c"
+  public-c:
+    cidr: 10.0.6.0/24
+    az: "{{ aws_region }}c"
+
+vpc_security_groups:
+  - name: vpc
+    description: "Allow internal traffic in the VPC"
+    rules:
+      - proto: all
+        group_name: vpc
+        ports: all
+  - name: allow-public-ssh
+    description: "Allow public SSH"
+    rules:
+      - proto: tcp
+        cidr_ip: 0.0.0.0/0
+        ports:
+          - 22
+  - name: allow-public-http
+    description: "Allow public web traffic"
+    rules:
+      - proto: tcp
+        cidr_ip: 0.0.0.0/0
+        ports:
+          - 80
+          - 8080
+          - 443

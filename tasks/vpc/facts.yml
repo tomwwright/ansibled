@@ -1,0 +1,41 @@
+- name: VPC facts
+  ec2_vpc_net_facts:
+    filters:
+      "tag:Name": "{{ vpc_name }}"
+  register: vpc_facts
+
+- name: "set fact: VPC ID"
+  set_fact:
+    vpc_id: "{{ vpc_facts.vpcs[0].id }}"
+
+- name: VPC subnet facts
+  ec2_vpc_subnet_facts:
+    filters:
+      vpc-id: "{{ vpc_id }}"
+  register: vpc_subnet_facts
+
+- name: "set facts: VPC subnet IDs"
+  set_fact:
+    vpc_subnet_ids: "{{ vpc_subnet_ids | default({}) | combine({ (item.tags.Name | default('default')): item.id }) }}"
+  loop: "{{ vpc_subnet_facts.subnets }}"
+
+- name: VPC security group facts
+  ec2_group_facts:
+    filters:
+      vpc-id: "{{ vpc_id }}"
+  register: vpc_security_group_facts
+
+- name: "set facts: VPC security group IDs"
+  set_fact:
+    vpc_security_group_ids: "{{ vpc_security_group_ids | default({}) | combine({ (item.group_name | default('default')): item.group_id }) }}"
+  loop: "{{ vpc_security_group_facts.security_groups }}"
+
+- name: VPC NAT gateway facts
+  ec2_vpc_nat_gateway_facts:
+    filters:
+      vpc-id: "{{ vpc_id }}"
+  register: vpc_nat_gateway_facts
+
+- name: "set fact: VPC NAT gateway IP"
+  set_fact:
+    vpc_nat_gateway_ip: "{{ vpc_nat_gateway_facts.result[0].nat_gateway_addresses.public_ip }}"
