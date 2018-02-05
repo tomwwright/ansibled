@@ -1,0 +1,62 @@
+# tasks/vpc/setup.gateways.yml
+# ---
+# creates the gateways for the VPC, and sets up routing for the subnets
+
+# create the internet gateway, saving the output to extract the ID later
+- name: create internet gateway
+  ec2_vpc_igw:
+    vpc_id: "{{ vpc_id }}"
+  register: create_gateway
+
+# create the NAT gateway, looking up the subnet ID by the human readable name: "private-a"
+- name: create NAT gateway
+  ec2_vpc_nat_gateway:
+    subnet_id: "{{ vpc_subnet_ids['private-a'] }}"
+    region: "{{ aws_region }}"
+    wait: yes
+    if_exist_do_not_create: true
+  register: create_nat_gateway
+
+# parse the outputs of the Ansible modules for some important details referred to when setting up routing
+- name: "set facts: Gateway IDs and IP"
+  set_fact:
+    vpc_gateway_id: "{{ create_gateway.gateway_id }}"
+    vpc_nat_gateway_id: "{{ create_nat_gateway.nat_gateway_id }}"
+    vpc_nat_gateway_ip: "{{ create_nat_gateway.nat_gateway_addresses.public_ip }}"
+
+# update the VPCs DNS with the public IP of the new NAT gateway
+- name: update DNS with NAT gateway IP
+  route53:
+    zone: "{{ vpc_dns_zone }}"
+    private_zone: yes
+    record: nat.{{ vpc_dns_zone }}
+    type: A
+    value: "{{ vpc_nat_gateway_ip }}"
+
+# private route table that routes through the NAT -- attach it to our three private subnets
+- name: create route table for private subnets
+  ec2_vpc_route_table:
+    vpc_id: "{{ vpc_id }}"
+    tags:
+      Name: "{{ vpc_name }}-private"
+    subnets:
+      - "{{ vpc_subnet_ids['private-a'] }}"
+      - "{{ vpc_subnet_ids['private-b'] }}"
+      - "{{ vpc_subnet_ids['private-c'] }}"
+    routes:
+      - dest: 0.0.0.0/0
+        gateway_id: "{{ vpc_nat_gateway_id }}"
+
+# public route table that routes through the internet gateway -- attach it to our three public subnets
+- name: create route table for public subnets
+  ec2_vpc_route_table:
+    vpc_id: "{{ vpc_id }}"
+    tags:
+      Name: "{{ vpc_name }}-public"
+    subnets:
+      - "{{ vpc_subnet_ids['public-a'] }}"
+      - "{{ vpc_subnet_ids['public-b'] }}"
+      - "{{ vpc_subnet_ids['public-c'] }}"
+    routes:
+      - dest: 0.0.0.0/0
+        gateway_id: "{{ vpc_gateway_id }}"

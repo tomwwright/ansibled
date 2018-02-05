@@ -1,0 +1,57 @@
+# tasks/vpc/setup.vpc.yml
+# ---
+# creates a VPC, configures a list of defined subnets, configures a list of defined security groups
+
+# use the Ansible module to create our VPC, saving the output into `create_vpc`
+- name: create VPC
+  ec2_vpc_net:
+    name: "{{ vpc_name }}"
+    cidr_block: "{{ vpc_cidr_block }}"
+    region: "{{ aws_region }}"
+  register: create_vpc
+
+# parse the output of creating the VPC to extract the VPC ID -- we need to specify this in the subsequent tasks
+- name: "set fact: VPC ID"
+  set_fact:
+    vpc_id: "{{ create_vpc.vpc.id }}"
+
+# iterate over our dictionary of subnets with `with_dict`, and create each one with the Ansible module
+- name: create VPC subnets
+  ec2_vpc_subnet:
+    vpc_id: "{{ vpc_id }}"
+    cidr: "{{ item.value.cidr }}"
+    az: "{{ item.value.az }}"
+    tags:
+      Name: "{{ item.key }}"
+  with_dict: "{{ vpc_subnets }}"
+  register: create_vpc_subnets
+
+# this is a tricky one, using some filters to:
+# - loop over the list of outputs from creating our subnets
+# - for that subnet, define a "name: id" entry in the `vpc_subnet_ids` dictionary (or empty dictionary if it doesn't exist)
+- name: "set fact: VPC subnet IDs"
+  set_fact:
+    vpc_subnet_ids: "{{ vpc_subnet_ids | default({}) | combine({ item.subnet.tags.Name: item.subnet.id }) }}"
+  loop: "{{ create_vpc_subnets.results }}"
+
+# iterate over our list of security groups and create each one with the Ansible module
+- name: create VPC security groups
+  ec2_group:
+    name: "{{ item.name }}"
+    description: "{{ item.description }}"
+    vpc_id: "{{ vpc_id }}"
+    rules: "{{ item.rules }}"
+  loop: "{{ vpc_security_groups }}"
+
+# create an EC2 key -- pretty simple
+- name: create EC2 key
+  ec2_key:
+    name: "{{ vpc_key }}"
+
+# create a private hosted zone for the VPC with the Ansible module
+- name: create Route 53 private hosted zone
+  route53_zone:
+    zone: "{{ vpc_dns_zone }}"
+    state: present
+    vpc_id: "{{ vpc_id }}"
+    vpc_region: "{{ aws_region }}"

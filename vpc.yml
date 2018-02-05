@@ -1,0 +1,13 @@
+# vpc.yml
+# ---
+# playbook that runs our VPC tasks for any hosts in the `vpc` group, providing AWS credentials in the environment 
+
+- hosts: vpc
+  environment:
+    AWS_ACCESS_KEY_ID: "{{ aws_access_key }}"
+    AWS_SECRET_ACCESS_KEY: "{{ aws_secret_key }}"
+    AWS_REGION: "{{ aws_region }}"
+  tasks:
+
+    - include_tasks: tasks/vpc/setup.vpc.yml
+    - include_tasks: tasks/vpc/facts.yml

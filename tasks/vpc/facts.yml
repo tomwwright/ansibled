@@ -1,0 +1,57 @@
+# tasks/vpc/facts.yml
+# ---
+# sets facts for some important IDs and IPs of our VPC
+
+# find the VPC by name
+- name: VPC facts
+  ec2_vpc_net_facts:
+    filters:
+      "tag:Name": "{{ vpc_name }}"
+  register: vpc_facts
+
+# parse the facts output and extract the VPC ID
+- name: "set fact: VPC ID"
+  set_fact:
+    vpc_id: "{{ vpc_facts.vpcs[0].id }}"
+
+# find our subnets by VPC ID that was just defined
+- name: VPC subnet facts
+  ec2_vpc_subnet_facts:
+    filters:
+      vpc-id: "{{ vpc_id }}"
+  register: vpc_subnet_facts
+
+# parse the facts output and extract the IDs with some fancy filter work:
+# - iterate each subnet found by the facts query
+# - for that subnet, define a "name: id" entry in the `vpc_subnet_ids` dictionary (or empty dictionary if it doesn't exist)
+- name: "set facts: VPC subnet IDs"
+  set_fact:
+    vpc_subnet_ids: "{{ vpc_subnet_ids | default({}) | combine({ (item.tags.Name | default('default')): item.id }) }}"
+  loop: "{{ vpc_subnet_facts.subnets }}"
+
+# find our security groups by VPC ID
+- name: VPC security group facts
+  ec2_group_facts:
+    filters:
+      vpc-id: "{{ vpc_id }}"
+  register: vpc_security_group_facts
+
+# parse the facts output and extract the IDs with some fancy filter work:
+# - iterate each security group found by the facts query
+# - for that group, define a "name: id" entry in the `vpc_security_group_ids` dictionary (or empty dictionary if it doesn't exist)
+- name: "set facts: VPC security group IDs"
+  set_fact:
+    vpc_security_group_ids: "{{ vpc_security_group_ids | default({}) | combine({ (item.group_name | default('default')): item.group_id }) }}"
+  loop: "{{ vpc_security_group_facts.security_groups }}"
+
+# find our NAT gateway by VPC ID
+- name: VPC NAT gateway facts
+  ec2_vpc_nat_gateway_facts:
+    filters:
+      vpc-id: "{{ vpc_id }}"
+  register: vpc_nat_gateway_facts
+
+# parse the facts output and extract the NAT gateway IP
+- name: "set fact: VPC NAT gateway IP"
+  set_fact:
+    vpc_nat_gateway_ip: "{{ vpc_nat_gateway_facts.result[0].nat_gateway_addresses.public_ip }}"
