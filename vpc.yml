@@ -10,4 +10,5 @@
   tasks:
 
     - include_tasks: tasks/vpc/setup.vpc.yml
+    - include_tasks: tasks/vpc/setup.gateways.yml
     - include_tasks: tasks/vpc/facts.yml
