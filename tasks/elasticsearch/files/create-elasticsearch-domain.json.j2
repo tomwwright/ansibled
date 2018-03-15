@@ -5,9 +5,9 @@
     "InstanceType": "{{ elasticsearch_instance_type }}",
     "InstanceCount": {{ elasticsearch_instance_count }},
     "ZoneAwarenessEnabled": {{ (elasticsearch_instance_count == 1) | ternary('false', 'true') }},
-    "DedicatedMasterEnabled": {{ elasticsearch_dedicated_masters_enabled }},
+    "DedicatedMasterEnabled": {{ elasticsearch_dedicated_masters_enabled | lower }},
     {% if elasticsearch_dedicated_masters_enabled %}
-    "DedicatedMasterType": {{ elasticsearch_dedicated_masters_type }},
+    "DedicatedMasterType": "{{ elasticsearch_dedicated_masters_type }}",
     "DedicatedMasterCount": {{ elasticsearch_dedicated_masters_count }},
     {% endif %}
   },
@@ -16,15 +16,14 @@
     "VolumeType": "gp2",
     "VolumeSize": {{ elasticsearch_ebs_size_gb }},
   },
-  "AccessPolicies": "{{ lookup('template', 'elasticsearch-access-policy.json.j2') | to_json | regex_replace('\"', '\\\"') }}",
+  "AccessPolicies": "{{ lookup('template', 'files/elasticsearch-access-policy.json.j2') | to_json | regex_replace('\"', '\\\"') }}",
   "SnapshotOptions": {
     "AutomatedSnapshotStartHour": 14
   },
   "VPCOptions": {
     "SubnetIds": [
       "{{ vpc_subnet_ids['private-a'] }}",
-      "{{ vpc_subnet_ids['private-b'] }}",
-      "{{ vpc_subnet_ids['private-c'] }}"
+      "{{ vpc_subnet_ids['private-b'] }}"
     ],
     "SecurityGroupIds": [
       "{{ vpc_security_group_ids['vpc'] }}"

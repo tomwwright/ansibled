@@ -1,7 +1,9 @@
 elasticsearch_name: ansibled-big-cluster
+elasticsearch_domain_name: big.elasticsearch.ansibled
 elasticsearch_ebs_size_gb: 80
-elasticsearch_instance_count: 5
-elasticsearch_instance_type: r4.xlarge
+elasticsearch_instance_count: 4
+elasticsearch_instance_type: r4.xlarge.elasticsearch
 elasticsearch_dedicated_masters_enabled: true
-elasticsearch_dedicated_masters_count: 3
-elasticsearch_dedicated_masters_type: m4.large
+elasticsearch_dedicated_masters_count: 2
+elasticsearch_dedicated_masters_type: m4.large.elasticsearch
+elasticsearch_domain_name: big.elasticsearch.ansibled

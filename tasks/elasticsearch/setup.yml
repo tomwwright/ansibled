@@ -7,6 +7,7 @@
 - name: check for Elasticsearch cluster
   command: aws es describe-elasticsearch-domains --region {{ aws_region }} --domain-names {{ elasticsearch_name }}
   register: elasticsearch_cluster_query
+  changed_when: false
 
 - name: parse Elasticsearch cluster query
   set_fact:
@@ -19,6 +20,7 @@
 
 - name: wait for Elasticsearch endpoint to be availabile
   command: aws es describe-elasticsearch-domains --region {{ aws_region }} --domain-names {{ elasticsearch_name }}
+  changed_when: false
   register: elasticsearch_cluster_query
   until: (elasticsearch_cluster_query.stdout | from_json).DomainStatusList[0].Endpoints is defined
   retries: 15
