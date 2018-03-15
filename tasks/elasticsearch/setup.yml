@@ -1,0 +1,41 @@
+- name: create service-linked IAM role for Elasticsearch
+  command: aws iam create-service-linked-role --region {{ aws_region }} --aws-service-name es.amazonaws.com
+  ignore_errors: true
+
+# ---
+
+- name: check for Elasticsearch cluster
+  command: aws es describe-elasticsearch-domains --region {{ aws_region }} --domain-names {{ elasticsearch_name }}
+  register: elasticsearch_cluster_query
+
+- name: parse Elasticsearch cluster query
+  set_fact:
+    elasticsearch_cluster: "{{ elasticsearch_cluster_query.stdout | from_json | json_query('DomainStatusList[0]')}}"
+
+- name: create Elasticsearch cluster
+  command: aws es create-elasticsearch-domain --region {{ aws_region }} --cli-input-json '{{ lookup('template', 'files/create-elasticsearch-domain.json.j2') | to_json }}'
+  when: elasticsearch_cluster == ''
+  register: elasticsearch_cluster_create
+
+- name: wait for Elasticsearch endpoint to be availabile
+  command: aws es describe-elasticsearch-domains --region {{ aws_region }} --domain-names {{ elasticsearch_name }}
+  register: elasticsearch_cluster_query
+  until: (elasticsearch_cluster_query.stdout | from_json).DomainStatusList[0].Endpoints is defined
+  retries: 15
+  delay: 60
+
+- name: parse Elasticsearch cluster query
+  set_fact:
+    elasticsearch_cluster: "{{ (elasticsearch_cluster_query.stdout | from_json).DomainStatusList[0] }}"
+
+- name: update VPC DNS for Elasticsearch cluster
+  route53:
+    state: present
+    zone: "{{ vpc_dns_zone }}"
+    private_zone: true
+    record: "{{ elasticsearch_domain_name }}"
+    type: CNAME
+    overwrite: true
+    ttl: 300
+    value: "{{ elasticsearch_cluster.Endpoints.vpc }}"
+  when: elasticsearch_cluster.Endpoints is defined and elasticsearch_domain_name is defined

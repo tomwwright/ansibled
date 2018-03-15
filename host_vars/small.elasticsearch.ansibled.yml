@@ -1,0 +1,4 @@
+elasticsearch_name: ansibled-small-cluster
+elasticsearch_ebs_size_gb: 20
+elasticsearch_instance_count: 2
+elasticsearch_instance_type: t2.medium.elasticsearch

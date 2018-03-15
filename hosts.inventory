@@ -1,5 +1,10 @@
+[elasticsearch]
+big.elasticsearch.ansibled
+small.elasticsearch.ansibled
+
 [vpc]
 vpc.ansibled
 
 [project.ansibled:children]
 vpc
+elasticsearch

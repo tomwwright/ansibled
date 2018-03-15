@@ -1,0 +1,16 @@
+# elasticsearch.yml
+# ---
+# playbook that builds elasticsearch clusters
+
+- hosts: elasticsearch
+  environment:
+    AWS_ACCESS_KEY_ID: "{{ aws_access_key }}"
+    AWS_SECRET_ACCESS_KEY: "{{ aws_secret_key }}"
+    AWS_REGION: "{{ aws_region }}"
+  tasks:
+
+    # discover any required facts about our VPC before building Elasticsearch
+    - import_tasks: tasks/vpc/facts.yml
+
+    # build Elasticsearch domain
+    - import_tasks: tasks/elasticsearch/setup.yml
