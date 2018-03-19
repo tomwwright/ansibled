@@ -6,6 +6,7 @@
 # using `register`
 - name: list existing IAM roles
   command: aws iam list-roles --no-paginate
+  changed_when: false
   register: list_iam_roles
 
 # convert the output from the CLI from JSON and look for a role with a known description

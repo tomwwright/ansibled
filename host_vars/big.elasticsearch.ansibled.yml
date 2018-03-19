@@ -1,3 +1,5 @@
+# host_vars/big.elasticsearch.ansibled.yml
+
 elasticsearch_name: ansibled-big-cluster
 elasticsearch_domain_name: big.elasticsearch.ansibled
 elasticsearch_ebs_size_gb: 80

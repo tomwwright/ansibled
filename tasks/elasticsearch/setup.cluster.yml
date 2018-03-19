@@ -13,11 +13,12 @@
 - name: parse Elasticsearch cluster query
   set_fact:
     elasticsearch_cluster: "{{ (elasticsearch_cluster_query.stdout | from_json).DomainStatusList[0] }}"
+  when: (elasticsearch_cluster_query.stdout | from_json).DomainStatusList[0] is defined
 
 # if the cluster doesn't exist (`when` clause), call the CLI to create it -- passing an evaluated template as the configuration
 - name: create Elasticsearch cluster
   command: aws es create-elasticsearch-domain --region {{ aws_region }} --cli-input-json '{{ lookup('template', 'files/create-elasticsearch-domain.json.j2') | to_json }}'
-  when: elasticsearch_cluster == ''
+  when: elasticsearch_cluster is not defined
   register: elasticsearch_cluster_create
 
 # poll the AWS CLI using `until` to wait until the output shows our Elasticsearch endpoint has appeared
