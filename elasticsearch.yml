@@ -1,6 +1,7 @@
 # elasticsearch.yml
 # ---
-# playbook that builds elasticsearch clusters
+# playbook that builds elasticsearch clusters: run our facts tasks for the VPC
+# to define some necessary details, then run the setup tasks
 
 - hosts: elasticsearch
   environment:
