@@ -10,7 +10,7 @@
     AWS_REGION: "{{ aws_region }}"
   tasks:
 
-    # discover any required facts about our VPC before building Elasticsearch
+    # discover required facts about our VPC before building Elasticsearch
     - import_tasks: tasks/vpc/facts.yml
 
     # build Elasticsearch domain
