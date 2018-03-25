@@ -1,0 +1,8 @@
+# group_vars/elasticsearch.yml
+# ---
+# specify defaults for our Elasticsearch clusters
+
+elasticsearch_version: 6.0
+elasticsearch_instance_type: r4.large
+elasticsearch_instance_count: 3
+elasticsearch_dedicated_masters_enabled: false

@@ -32,7 +32,7 @@
 - name: "set fact: VPC subnet IDs"
   set_fact:
     vpc_subnet_ids: "{{ vpc_subnet_ids | default({}) | combine({ item.subnet.tags.Name: item.subnet.id }) }}"
-  loop: "{{ create_vpc_subnets.results }}"
+  with_items: "{{ create_vpc_subnets.results }}"
 
 # iterate over our list of security groups and create each one with the Ansible module
 - name: create VPC security groups
@@ -41,7 +41,7 @@
     description: "{{ item.description }}"
     vpc_id: "{{ vpc_id }}"
     rules: "{{ item.rules }}"
-  loop: "{{ vpc_security_groups }}"
+  with_items: "{{ vpc_security_groups }}"
 
 # create an EC2 key -- pretty simple
 - name: create EC2 key

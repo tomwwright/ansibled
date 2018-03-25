@@ -1,0 +1,7 @@
+# tasks/elasticsearch/setup.yml
+# ---
+# entrypoint for our Elasticsearch setup tasks, simply ties together the task
+# lists for the role and the cluster
+
+- import_tasks: setup.role.yml
+- import_tasks: setup.cluster.yml

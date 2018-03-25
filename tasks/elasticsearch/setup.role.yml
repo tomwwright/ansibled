@@ -1,0 +1,22 @@
+# tasks/elasticsearch/setup.role.yml
+# ---
+# create the service-linked IAM role used by AWS Elasticsearch Service
+
+# use the AWS CLI to retrieve a list of our IAM roles, store it in a variable
+# using `register`
+- name: list existing IAM roles
+  command: aws iam list-roles --no-paginate
+  changed_when: false
+  register: list_iam_roles
+
+# convert the output from the CLI from JSON and look for a role with a known description
+- name: find service-linked IAM role for Elasticsearch
+  set_fact:
+    iam_role: "{{ list_iam_roles.stdout | from_json | json_query(query) }}"
+  vars:
+    query: Roles[?Description=='ansibled-es-role'] | [0]
+
+# if we couldn't find our role (`when` clause), call the AWS CLI to create it
+- name: create service-linked IAM role for Elasticsearch
+  command: aws iam create-service-linked-role --region {{ aws_region }} --aws-service-name es.amazonaws.com --description ansibled-es-role
+  when: iam_role == ''

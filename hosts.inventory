@@ -1,5 +1,14 @@
+# hosts.inventory
+# ---
+# the host and group list for this example "Ansibled" project
+
+[elasticsearch]
+big.elasticsearch.ansibled
+small.elasticsearch.ansibled
+
 [vpc]
 vpc.ansibled
 
 [project.ansibled:children]
 vpc
+elasticsearch
