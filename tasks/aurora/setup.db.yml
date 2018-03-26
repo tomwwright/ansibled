@@ -1,3 +1,4 @@
+# look for an existing Aurora DB instance for this host using the AWS CLI
 - name: check for Aurora DB instance
   command: aws rds describe-db-instances --filters Name=db-instance-id,Values={{ aurora_db_name }} --region {{ aws_region }}
   changed_when: false
@@ -7,6 +8,7 @@
   set_fact:
     aurora_instance: "{{ aurora_instance_query.stdout | from_json | json_query('DBInstances[0]')}}"
 
+# create the instance if it doesn't exist -- passing config as JSON from a Jinja2 template
 - name: create Aurora DB instance
   command: aws rds create-db-instance --region {{ aws_region }} --cli-input-json '{{ lookup('template', 'files/create-db-instance.json.j2') | to_json }}'
   when: aurora_instance == ''

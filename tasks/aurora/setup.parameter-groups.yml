@@ -1,3 +1,4 @@
+# list existing cluster parameter groups using the AWS CLI
 - name: check for DB cluster parameter group
   command: >
     aws rds describe-db-cluster-parameter-groups
@@ -6,12 +7,14 @@
   changed_when: false
   register: db_cluster_parameter_group_query
 
+# search through existing parameter groups to see if our's already exists (idempotence!)
 - name: parse DB cluster parameter group query
   set_fact:
     db_cluster_parameter_group: "{{ db_cluster_parameter_group_query.stdout | from_json | json_query(query)}}"
   vars:
     query: DBClusterParameterGroups[?DBClusterParameterGroupName=='default-cluster-aurora-5-7'] | [0]
 
+# create the cluster paramter group with the AWS CLI if it doesn't already exist
 - name: create DB cluster parameter group
   command: >
     aws rds create-db-cluster-parameter-group
