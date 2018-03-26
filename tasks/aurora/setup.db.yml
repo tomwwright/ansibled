@@ -13,3 +13,8 @@
   command: aws rds create-db-instance --region {{ aws_region }} --cli-input-json '{{ lookup('template', 'files/create-db-instance.json.j2') | to_json }}'
   when: aurora_instance == ''
   register: aurora_instance_create
+
+- name: parse Aurora DB instance query
+  set_fact:
+    aurora_instance: "{{ aurora_instance_create.stdout | from_json | json_query('DBInstance')}}"
+  when: aurora_instance == ''
