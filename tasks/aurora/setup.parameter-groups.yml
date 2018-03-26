@@ -1,0 +1,22 @@
+- name: check for DB cluster parameter group
+  command: >
+    aws rds describe-db-cluster-parameter-groups
+      --no-paginate
+      --region {{ aws_region }}
+  changed_when: false
+  register: db_cluster_parameter_group_query
+
+- name: parse DB cluster parameter group query
+  set_fact:
+    db_cluster_parameter_group: "{{ db_cluster_parameter_group_query.stdout | from_json | json_query(query)}}"
+  vars:
+    query: DBClusterParameterGroups[?DBClusterParameterGroupName=='default-cluster-aurora-5-7'] | [0]
+
+- name: create DB cluster parameter group
+  command: >
+    aws rds create-db-cluster-parameter-group
+      --db-cluster-parameter-group-name default-cluster-aurora-5-7
+      --db-parameter-group-family aurora-mysql5.7
+      --description "Default Aurora MySQL 5.7 cluster parameter group created by Ansible"
+      --region {{ aws_region }}
+  when: db_cluster_parameter_group == ''

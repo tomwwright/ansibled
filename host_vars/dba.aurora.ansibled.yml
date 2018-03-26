@@ -1,0 +1,10 @@
+# host_vars/dba.aurora.ansibled.yml
+# ---
+# specific configuration for one of our Aurora DBs
+
+aurora_cluster_name: ansibled-aurora-cluster
+aurora_db_name: ansibled-aurora-a
+
+aurora_instance_type: db.t2.small
+aurora_availability_zone: "{{ aws_region }}a"
+aurora_promotion_tier: 1
