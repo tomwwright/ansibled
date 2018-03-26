@@ -1,0 +1,36 @@
+# tasks/auroradb/setup.cluster.yml
+# ---
+# check if an Aurora DB cluster exists, and create it if it doesn't. Then update the VPC DNS
+
+# look for an existing Aurora DB cluster for this host using the AWS CLI
+- name: check for Aurora DB cluster
+  command: aws rds describe-db-clusters --filters Name=db-cluster-id,Values={{ aurora_cluster_name }} --region {{ aws_region }}
+  changed_when: false
+  register: aurora_cluster_query
+
+- name: parse Aurora DB cluster query
+  set_fact:
+    aurora_cluster: "{{ aurora_cluster_query.stdout | from_json | json_query('DBClusters[0]')}}"
+
+# create the cluster if it doesn't exist -- passing config as JSON from a Jinja2 template
+- name: create Aurora DB cluster
+  command: aws rds create-db-cluster --region {{ aws_region }} --cli-input-json '{{ lookup('template', 'files/create-db-cluster.json.j2') | to_json }}'
+  when: aurora_cluster == ''
+  register: aurora_cluster_create
+
+# parse JSON output of the AWS CLI create cluster command, if we ran it, to get our cluster details
+- name: parse Aurora DB cluster create
+  set_fact:
+    aurora_cluster: "{{ aurora_cluster_create.stdout | from_json | json_query('DBCluster') }}"
+  when: aurora_cluster == ''
+
+- name: update VPC DNS for Aurora DB cluster
+  route53:
+    state: present
+    zone: "{{ vpc_dns_zone }}"
+    private_zone: true
+    record: "{{ aurora_cluster_dns }}"
+    type: CNAME
+    overwrite: true
+    ttl: 900
+    value: "{{ aurora_cluster.Endpoint }}"

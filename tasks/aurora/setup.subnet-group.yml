@@ -1,0 +1,10 @@
+# use an Ansible module to configure the subnet group for our cluster
+- name: configure DB subnet group
+  rds_subnet_group:
+    name: "{{ aurora_cluster_name }}-subnets"
+    description: "Subnets used by {{ aurora_cluster_name }} Aurora cluster"
+    subnets:
+      - "{{ vpc_subnet_ids['private-a'] }}"
+      - "{{ vpc_subnet_ids['private-b'] }}"
+      - "{{ vpc_subnet_ids['private-c'] }}"
+    state: present

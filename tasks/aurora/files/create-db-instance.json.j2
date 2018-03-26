@@ -1,0 +1,15 @@
+{
+  "DBInstanceIdentifier": "{{ aurora_db_name }}",
+  "DBInstanceClass": "{{ aurora_instance_type }}",
+  "Engine": "aurora-mysql",
+  "AvailabilityZone": "{{ aurora_availability_zone }}",
+  "DBSubnetGroupName": "{{ aurora_cluster_name }}-subnets",
+  "PreferredMaintenanceWindow": "mon:11:00-mon:11:30",
+  "MultiAZ": false,
+  "AutoMinorVersionUpgrade": true,
+  "LicenseModel": "general-public-license",
+  "PubliclyAccessible": false,
+  "Tags": [],
+  "DBClusterIdentifier": "{{ aurora_cluster_name }}",
+  "PromotionTier": {{ aurora_promotion_tier | default('1') }}
+}

@@ -1,0 +1,19 @@
+{
+  "AvailabilityZones": [
+    "{{ aurora_cluster_availability_zones | join('", "') }}"
+  ],
+  "BackupRetentionPeriod": 7,
+  "DBClusterIdentifier": "{{ aurora_cluster_name }}",
+  "DBClusterParameterGroupName": "default-cluster-aurora-5-7",
+  "VpcSecurityGroupIds": [
+    "{{ aurora_cluster_security_groups | join('", "') }}"
+  ],
+  "DBSubnetGroupName": "{{ aurora_cluster_name }}-subnets",
+  "Engine": "aurora-mysql",
+  "EngineVersion": "5.7.12",
+  "Port": {{ aurora_cluster_port }},
+  "MasterUsername": "{{ aurora_cluster_username }}",
+  "MasterUserPassword": "{{ aurora_cluster_password }}",
+  "Tags": [],
+  "StorageEncrypted": true
+}

@@ -1,0 +1,16 @@
+# host_vars/cluster.aurora.ansibled.yml
+# ---
+# specific variables for the "auroradb.ansibled" host
+
+aurora_cluster_name: ansibled-aurora-cluster
+aurora_cluster_dns: auroradb.{{ vpc_dns_zone }}
+
+# credentials for the master user of our db cluster -- password (ansibled-db-password) encrypted with Ansible Vault
+aurora_cluster_username: ansibled_db_user
+aurora_cluster_password: !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          63313164666335343165616234663938376539393163336233336535623831383135393731393938
+          6561346464306536303161303261363334303566616663390a336636623566333737363830316335
+          30636161396231646130353939373236353833313164353462646535646432623939343937346438
+          3635303438343963660a323534613431643465316630353735663437333430393232316636313364
+          36383330363532363963666432313262623134366465333532623865356139376161

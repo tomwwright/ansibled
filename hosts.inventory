@@ -6,9 +6,18 @@
 big.elasticsearch.ansibled
 small.elasticsearch.ansibled
 
+[aurora.cluster]
+cluster.aurora.ansibled
+
+[aurora.db]
+dba.aurora.ansibled
+dbb.aurora.ansibled
+
 [vpc]
 vpc.ansibled
 
 [project.ansibled:children]
 vpc
+aurora.cluster
+aurora.db
 elasticsearch

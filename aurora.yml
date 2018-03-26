@@ -1,0 +1,26 @@
+# aurora.yml
+# ---
+# playbook that builds Aurora clusters and Aurora DB instances
+
+# first run a play for any cluster hosts to create them
+- hosts: aurora.cluster
+  environment:
+    AWS_ACCESS_KEY_ID: "{{ aws_access_key }}"
+    AWS_SECRET_ACCESS_KEY: "{{ aws_secret_key }}"
+    AWS_REGION: "{{ aws_region }}"
+  tasks:
+
+    - import_tasks: tasks/vpc/facts.yml
+    - import_tasks: tasks/aurora/setup.subnet-group.yml
+    - import_tasks: tasks/aurora/setup.parameter-groups.yml
+    - import_tasks: tasks/aurora/setup.cluster.yml
+
+# then run a play for all aurora.db hosts, to add them to the clusters
+- hosts: aurora.db
+  environment:
+    AWS_ACCESS_KEY_ID: "{{ aws_access_key }}"
+    AWS_SECRET_ACCESS_KEY: "{{ aws_secret_key }}"
+    AWS_REGION: "{{ aws_region }}"
+  tasks:
+
+    - import_tasks: tasks/aurora/setup.db.yml
