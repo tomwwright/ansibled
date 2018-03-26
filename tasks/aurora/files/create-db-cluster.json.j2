@@ -6,7 +6,7 @@
   "DBClusterIdentifier": "{{ aurora_cluster_name }}",
   "DBClusterParameterGroupName": "default-cluster-aurora-5-7",
   "VpcSecurityGroupIds": [
-    "{{ aurora_cluster_security_groups | join('", "') }}"
+    "{{ aurora_cluster_security_group_ids | join('", "') }}"
   ],
   "DBSubnetGroupName": "{{ aurora_cluster_name }}-subnets",
   "Engine": "aurora-mysql",

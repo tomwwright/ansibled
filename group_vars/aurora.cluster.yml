@@ -2,10 +2,14 @@
 # ---
 # default variables for hosts in the "auroradb" group
 
-aurora_cluster_security_groups:
+aurora_cluster_security_group_ids:
   - "{{ vpc_security_group_ids['vpc'] }}"
 aurora_cluster_port: 3306
 aurora_cluster_availability_zones:
   - "{{ aws_region }}a"
   - "{{ aws_region }}b"
   - "{{ aws_region }}c"
+aurora_cluster_subnet_ids:
+  - "{{ vpc_subnet_ids['private-a'] }}"
+  - "{{ vpc_subnet_ids['private-b'] }}"
+  - "{{ vpc_subnet_ids['private-c'] }}"

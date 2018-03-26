@@ -3,8 +3,5 @@
   rds_subnet_group:
     name: "{{ aurora_cluster_name }}-subnets"
     description: "Subnets used by {{ aurora_cluster_name }} Aurora cluster"
-    subnets:
-      - "{{ vpc_subnet_ids['private-a'] }}"
-      - "{{ vpc_subnet_ids['private-b'] }}"
-      - "{{ vpc_subnet_ids['private-c'] }}"
+    subnets: "{{ aurora_cluster_subnet_ids }}"
     state: present
