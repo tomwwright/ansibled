@@ -1,3 +1,7 @@
+# tasks/aurora/setup.parameter-group.yml
+# ---
+# use the AWS CLI to create a (default) parameter group for Aurora clusters
+
 # list existing cluster parameter groups using the AWS CLI
 - name: check for DB cluster parameter group
   command: >

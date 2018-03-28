@@ -1,4 +1,7 @@
+# tasks/aurora/setup.subnet-group.yml
+# ---
 # use an Ansible module to configure the subnet group for our cluster
+
 - name: configure DB subnet group
   rds_subnet_group:
     name: "{{ aurora_cluster_name }}-subnets"
