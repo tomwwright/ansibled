@@ -1,0 +1,32 @@
+# POST to Logentries and create the new log, note:
+# - provide our API key in the `x-api-key` header
+# - Logentries API responds with a 201, so that is a successful response (status_code)
+# - provide our Logset id so that our new log will be created in it
+- name: create Log in Logentries if it doesn't exist - {{ item }}
+  uri:
+    url: https://rest.logentries.com/management/logs
+    headers:
+      x-api-key: "{{ logentries_api_key }}"
+    method: POST
+    body_format: json
+    body:
+      log:
+        name: "{{ item | lower }}"
+        logs_info: []
+        user_data: {}
+        source_type: token
+        logsets_info:
+          - id: "{{ logentries_logset.id }}"
+    status_code: 200,201
+    return_content: yes
+  register: create_log_info
+
+# scrape the Logentries response for the new log token -- for use later
+- name: save the Log token (new log)
+  set_fact:
+    logentries_log_tokens: "{{ logentries_log_tokens | default({}) | combine({ item: create_log_info.json.log.tokens[0] }) }}"
+
+# update our Log id dictionary
+- name: save the Log id (new log)
+  set_fact:
+    logentries_log_ids: "{{ logentries_log_ids | default({}) | combine({ item: create_log_info.json.log.id }) }}"

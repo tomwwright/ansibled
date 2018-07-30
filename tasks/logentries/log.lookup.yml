@@ -1,0 +1,18 @@
+# GET from Logentries for existing log details, note:
+# - provide our API key in the `x-api-key` header
+# - Logentries API responds with a 201, so that is a successful response (status_code)
+- name: look up Log in Logentries if it does exist - {{ item }}
+  uri:
+    url: https://rest.logentries.com/management/logs/{{ logentries_log_ids[item] }}
+    headers:
+      x-api-key: "{{ logentries_api_key }}"
+    method: GET
+    return_content: yes
+  register: lookup_log_info
+  when: logentries_log_ids[item] is defined
+
+# scrape the Logentries response for the log token -- for use later
+- name: save the Log token (existing log)
+  set_fact:
+    logentries_log_tokens: "{{ logentries_log_tokens | default({}) | combine({ item: lookup_log_info.json.log.tokens[0] }) }}"
+  when: logentries_log_ids[item] is defined
