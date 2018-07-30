@@ -1,0 +1,68 @@
+# pull down the current state of our Logentries logs from the REST API
+- name: retrieve Logsets info from Logentries
+  uri:
+    url: https://rest.logentries.com/management/logsets
+    headers:
+      x-api-key: "{{ logentries_api_key }}"
+    method: GET
+    return_content: yes
+  register: logentries_logsets_info
+
+# ---
+
+# use json_query to pick through the log sets and see if the Logset for this
+# host already exists
+- name: check if Logset for this host already exists
+  set_fact:
+    logentries_logset: "{{ logentries_logsets_info.json | json_query(query) }}"
+  vars:
+    query: logsets[?name=='{{ logentries_logset_name }}'] | [0]
+
+# if it doesn't exist (when condition), POST to the REST API and create the Logset
+- name: create the Logset if it doesn't exist
+  uri:
+    url: https://rest.logentries.com/management/logsets
+    headers:
+      x-api-key: "{{ logentries_api_key }}"
+    method: POST
+    body_format: json
+    body:
+      logset:
+        name: "{{ logentries_logset_name }}"
+        logs_info: []
+        user_data: {}
+    status_code: 200,201
+    return_content: yes
+  register: new_logset_info
+  when: logentries_logset == ''
+
+# just a little parsing on the request response
+- name: set new Logset info
+  set_fact:
+    logentries_logset: "{{ new_logset_info.json.logset }}"
+  when: logentries_logset == ''
+
+# ---
+
+# define an empty container to use in our next step
+- set_fact:
+    logentries_log_ids: {}
+
+# iterate each log in our logset info from Logentries and add it to a dictionary
+# to give us a dictionary of `name` -> `id`
+- name: extract existing Log IDs from Log Sets info
+  set_fact:
+    logentries_log_ids: "{{ logentries_log_ids | combine({ (item.name | default('default') | regex_replace('[ -]', '_') | upper ): item.id }) }}"
+  with_items: "{{ logentries_logset.logs_info }}"
+
+# for each of our defined logs for this host, if the id is in our dictionary, just do a lookup
+- name: lookup existing log
+  include_tasks: log.lookup.yml
+  with_items: "{{ logentries_log_names }}"
+  when: logentries_log_ids[item] is defined
+
+# for each of our defined logs for this host, if the id isn't in our dictionary, create it
+- name: create log
+  include_tasks: log.create.yml
+  with_items: "{{ logentries_log_names }}"
+  when: logentries_log_ids[item] is not defined

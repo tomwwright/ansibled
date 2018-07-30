@@ -1,0 +1,50 @@
+- hosts: localhost
+  environment:
+    AWS_ACCESS_KEY_ID: "{{ aws_access_key }}"
+    AWS_SECRET_ACCESS_KEY: "{{ aws_secret_key }}"
+    AWS_DEFAULT_REGION: "{{ aws_region }}"
+  tasks:
+
+    # use the AWS CLI to query for details about this cluster, if it exists
+    - name: check for existing Elasticsearch cluster
+      command: aws es describe-elasticsearch-domains --domain-names {{ elasticsearch_name }}
+      changed_when: false
+      register: elasticsearch_cluster_query
+
+    # handle the output from the CLI
+    - name: parse Elasticsearch cluster query
+      set_fact:
+        elasticsearch_cluster: "{{ elasticsearch_cluster_query.stdout | from_json | json_query('DomainStatusList[0]') }}"
+
+    # if the cluster doesn't exist (`when` clause), call the CLI to create it -- passing an evaluated template as the configuration
+    - name: create Elasticsearch cluster
+      command: aws es create-elasticsearch-domain --region {{ aws_region }} --cli-input-json '{{ lookup('template', 'templates/create-elasticsearch-domain.json.j2') | to_json }}'
+      when: elasticsearch_cluster is not defined
+      register: elasticsearch_cluster_create
+
+    # poll the AWS CLI using `until` to wait until the output shows our Elasticsearch endpoint has appeared
+    - name: wait for Elasticsearch endpoint to be availabile
+      command: aws es describe-elasticsearch-domains --domain-names {{ elasticsearch_name }}
+      changed_when: false
+      register: elasticsearch_cluster_query
+      until: (elasticsearch_cluster_query.stdout | from_json).DomainStatusList[0].Endpoints is defined
+      retries: 15
+      delay: 60
+
+    # handle the output from the CLI a bit
+    - name: parse Elasticsearch cluster query
+      set_fact:
+        elasticsearch_cluster: "{{ (elasticsearch_cluster_query.stdout | from_json).DomainStatusList[0] }}"
+
+    # use an Ansible module to update the Route 53 record for our Elasticsearch host
+    - name: update VPC DNS for Elasticsearch cluster
+      route53:
+        state: present
+        zone: "{{ vpc_dns_zone }}"
+        private_zone: true
+        record: "{{ elasticsearch_domain_name }}"
+        type: CNAME
+        overwrite: true
+        ttl: 300
+        value: "{{ elasticsearch_cluster.Endpoints.vpc }}"
+      when: elasticsearch_cluster.Endpoints is defined and elasticsearch_domain_name is defined
