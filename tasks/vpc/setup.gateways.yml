@@ -18,15 +18,18 @@
   register: create_nat_gateway
 
 # parse the outputs of the Ansible modules for some important details referred to when setting up routing
-- name: "set facts: Gateway IDs and IP"
+- name: Gateway IDs and IP
+  # ansible.builtin.debug:
+  #   msg: create_nat_gateway.nat_gateway_id = {{ create_nat_gateway.nat_gateway_id }} |||||||||| create_nat_gateway.nat_gateway_addresses[0].public_ip = {{ create_nat_gateway.nat_gateway_addresses[0].public_ip }}
   set_fact:
     vpc_gateway_id: "{{ create_gateway.gateway_id }}"
     vpc_nat_gateway_id: "{{ create_nat_gateway.nat_gateway_id }}"
-    vpc_nat_gateway_ip: "{{ create_nat_gateway.nat_gateway_addresses.public_ip }}"
+    vpc_nat_gateway_ip: "{{ create_nat_gateway.nat_gateway_addresses[0].public_ip }}"
 
 # update the VPCs DNS with the public IP of the new NAT gateway
 - name: update DNS with NAT gateway IP
   route53:
+    state: present
     zone: "{{ vpc_dns_zone }}"
     private_zone: yes
     record: nat.{{ vpc_dns_zone }}
@@ -45,7 +48,7 @@
       - "{{ vpc_subnet_ids['private-c'] }}"
     routes:
       - dest: 0.0.0.0/0
-        gateway_id: "{{ vpc_nat_gateway_id }}"
+        gateway_id: "{{ vpc_gateway_id }}"
 
 # public route table that routes through the internet gateway -- attach it to our three public subnets
 - name: create route table for public subnets

@@ -1,5 +1,6 @@
 # host_vars/vpc.ansibled.yml
 
+# IP CIDR block for the VPC
 vpc_cidr_block: 10.0.0.0/16
 
 vpc_subnets:
@@ -28,7 +29,8 @@ vpc_security_groups:
     rules:
       - proto: all
         group_name: vpc
-        ports: all
+        from_port: 0
+        to_port: 65535
   - name: allow-public-ssh
     description: "Allow public SSH"
     rules:

@@ -4,7 +4,7 @@
 
 # find the VPC by name
 - name: VPC facts
-  ec2_vpc_net_facts:
+  ec2_vpc_net_info:
     filters:
       "tag:Name": "{{ vpc_name }}"
   register: vpc_facts
@@ -16,7 +16,7 @@
 
 # find our subnets by VPC ID that was just defined
 - name: VPC subnet facts
-  ec2_vpc_subnet_facts:
+  ec2_vpc_subnet_info:
     filters:
       vpc-id: "{{ vpc_id }}"
   register: vpc_subnet_facts
@@ -31,7 +31,7 @@
 
 # find our security groups by VPC ID
 - name: VPC security group facts
-  ec2_group_facts:
+  ec2_group_info:
     filters:
       vpc-id: "{{ vpc_id }}"
   register: vpc_security_group_facts
@@ -46,14 +46,12 @@
 
 # find our NAT gateway by VPC ID
 - name: VPC NAT gateway facts
-  ec2_vpc_nat_gateway_facts:
+  ec2_vpc_nat_gateway_info:
     filters:
       vpc-id: "{{ vpc_id }}"
   register: vpc_nat_gateway_facts
-  when: vpc_use_nat
 
 # parse the facts output and extract the NAT gateway IP
 - name: "set fact: VPC NAT gateway IP"
   set_fact:
-    vpc_nat_gateway_ip: "{{ vpc_nat_gateway_facts.result[0].nat_gateway_addresses.public_ip }}"
-  when: vpc_use_nat
+    vpc_nat_gateway_ip: "{{ vpc_nat_gateway_facts.result[0].nat_gateway_addresses[0].public_ip }}"
